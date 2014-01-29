@@ -22,9 +22,7 @@ public class Decoder {
 	    		int nbChannels = sampleReader.getFormat().getChannels();
 			int totalBytes = (int) sampleReader.getSampleCount()*nbChannels;
 			int bytesToRead=4096*2; //some aribituary number thats 2^n
-			String[] messageAsBytes = new String[totalBytes/bytesToRead];
-			int currentCharIndex = 0;
-			int bitsSaved = 0;
+			StringBuilder messageAsBytes = new StringBuilder(totalBytes/bytesToRead);
 
 	   		double[] audioData = new double[totalBytes];
 	    		sampleReader.getInterleavedSamples(0, totalBytes, audioData);
@@ -74,30 +72,21 @@ public class Decoder {
 					//if (Math.abs(overtones[overtoneToTest-1][1]-expectedOvertones[overtoneToTest-1])>.0049) {
 					if (ampToTest>.009) { //just test a certain freq
 						//checking if something is null..
-						if (messageAsBytes[currentCharIndex]==null) {
-							messageAsBytes[currentCharIndex]="1";
-						} else {
-							messageAsBytes[currentCharIndex]=messageAsBytes[currentCharIndex] + "1"; //adding a 1
-						}
+						messageAsBytes.append("1");
 					} else {
-						if (messageAsBytes[currentCharIndex]==null) {
-							messageAsBytes[currentCharIndex]="0";
-						} else {
-							messageAsBytes[currentCharIndex]=messageAsBytes[currentCharIndex] + "0"; //adding a 0
-						}
+						messageAsBytes.append("0");
 					}
-					bitsSaved++;
-					if (bitsSaved%8==0) {
-						if (messageAsBytes[currentCharIndex].equals("00000000")) { //if null
+					int bitsSaved = messageAsBytes.length();
+					if (bitsSaved % 8 == 0 && bitsSaved != 0) {
+						if (messageAsBytes.toString().substring(bitsSaved-8, bitsSaved).equals("00000000")) { //if null
 							System.out.println("The message is over.");
 							break; //the message is done
 						}
-						currentCharIndex++;
 					}
  				}
 			}
 
-			hiddenMessage=constructMessage(messageAsBytes);
+			hiddenMessage = constructMessage(messageAsBytes.toString());
         	} catch (UnsupportedAudioFileException e) {
         	    e.printStackTrace();
         	} catch (IOException e) {
@@ -106,17 +95,8 @@ public class Decoder {
 		return hiddenMessage;
 	}
 
-	private static String constructMessage(String[] messageInBinary) {
-		String message = "";
-		for (int i = 0 ; i<messageInBinary.length ; i++) {
-			if (messageInBinary[i] == null) {
-				continue;
-			}
-			Binary charInBinary = new Binary(messageInBinary[i]);
-			message += BinaryTool.binaryToASCII(charInBinary);
-		}
-
-		return message;
+	private static String constructMessage(String messageInBinary) {
+		return BinaryTool.binaryToASCII(new Binary(messageInBinary));
 	}
 
 	public static void main(String args[]) {
