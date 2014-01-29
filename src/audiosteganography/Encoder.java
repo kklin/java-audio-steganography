@@ -6,7 +6,7 @@ import audiosteganography.audio.AudioSampleReader;
 import audiosteganography.audio.AudioSampleWriter;
 import audiosteganography.fourier.Complex;
 import audiosteganography.fourier.FFT;
-
+import audiosteganography.binary.BinaryTool;
 
 public class Encoder {
 	File audioFile;
@@ -16,8 +16,7 @@ public class Encoder {
 	}
 
 	public void encodeMessage(String message, String outPath) { //change outPath to File
-		ASCII phrase = new ASCII(message);
-		int[] messageAsBits = phrase.getBinaryBitArray();
+		int[] messageAsBits = BinaryTool.stringToBinary(message).getIntArray();
 		int currentBit = 0;
         	try {
         		AudioSampleReader sampleReader = new AudioSampleReader(audioFile);
