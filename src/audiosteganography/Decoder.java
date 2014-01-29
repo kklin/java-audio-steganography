@@ -2,6 +2,8 @@ package audiosteganography;
 
 import audiosteganography.audio.AudioSampleReader;
 import audiosteganography.fourier.FFT;
+import audiosteganography.binary.Binary;
+import audiosteganography.binary.BinaryTool;
 import java.io.*;
 import javax.sound.sampled.*;
 
@@ -75,13 +77,13 @@ public class Decoder {
 						if (messageAsBytes[currentCharIndex]==null) {
 							messageAsBytes[currentCharIndex]="1";
 						} else {
-							messageAsBytes[currentCharIndex]="1"+messageAsBytes[currentCharIndex]; //adding a 1
+							messageAsBytes[currentCharIndex]=messageAsBytes[currentCharIndex] + "1"; //adding a 1
 						}
 					} else {
 						if (messageAsBytes[currentCharIndex]==null) {
 							messageAsBytes[currentCharIndex]="0";
 						} else {
-							messageAsBytes[currentCharIndex]="0"+messageAsBytes[currentCharIndex]; //adding a 0
+							messageAsBytes[currentCharIndex]=messageAsBytes[currentCharIndex] + "0"; //adding a 0
 						}
 					}
 					bitsSaved++;
@@ -107,49 +109,14 @@ public class Decoder {
 	private static String constructMessage(String[] messageInBinary) {
 		String message = "";
 		for (int i = 0 ; i<messageInBinary.length ; i++) {
-			int byteAsInt = byteToInt(messageInBinary[i]);
-			if (byteAsInt!=-1) {
-				message = message + String.valueOf((char)byteAsInt);
+			if (messageInBinary[i] == null) {
+				continue;
 			}
+			Binary charInBinary = new Binary(messageInBinary[i]);
+			message += BinaryTool.binaryToASCII(charInBinary);
 		}
 
 		return message;
-	}
-
-	private static int byteToInt(String byteAsString) {
-		if (byteAsString==null) {
-			return -1;
-		}
-		int byteAsInt = Integer.parseInt(byteAsString);
-		int intValue = 0;
-		for (int i = 1 ; i<9 ; i++) {
-			if ((numberOfPlaces( (int) (byteAsInt%Math.pow(10,i)) )==i) && (byteAsInt%Math.pow(10,i)!=0)) {
-				intValue+=Math.pow(2,(i-1));
-			}
-		}
-		return intValue;
-	}
-
-	private static int numberOfPlaces(int num) {
-		int toReturn;
-		if (num>9999999) {
-			toReturn =  8;
-		} else if (num>999999) {
-			toReturn =  7;
-		} else if (num>99999) {
-			toReturn = 6;
-		} else if (num>9999) {
-			toReturn = 5;
-		} else if (num>999) {
-			toReturn = 4;
-		} else if (num>99) {
-			toReturn = 3;
-		} else if (num>9) {
-			toReturn = 2;
-		} else {
-			toReturn = 1;
-		}
-		return toReturn;
 	}
 
 	public static void main(String args[]) {

@@ -25,12 +25,15 @@ public class Binary {
 		return contents;
 	}
 
-	@Override
-	public String toString() {
+	public String getStringRepr() {
 		String stringRepr = "";
 		for (int i = 0 ; i<contents.length ; i++) {
 			stringRepr += contents[i];
 		}
 		return stringRepr;
+	}
+	@Override
+	public String toString() {
+		return getStringRepr();
 	}
 }

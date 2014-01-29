@@ -16,7 +16,7 @@ public class Encoder {
 	}
 
 	public void encodeMessage(String message, String outPath) { //change outPath to File
-		int[] messageAsBits = BinaryTool.stringToBinary(message).getIntArray();
+		int[] messageAsBits = BinaryTool.ASCIIToBinary(message).getIntArray();
 		int currentBit = 0;
         	try {
         		AudioSampleReader sampleReader = new AudioSampleReader(audioFile);
