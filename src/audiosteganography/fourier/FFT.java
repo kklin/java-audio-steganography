@@ -87,94 +87,96 @@ public class FFT {
 
     }
 
-    public static double[][] getMag(double[] data, int Fs) {
-	data=correctDataLength(data);
-	Complex[] x = new Complex[data.length];
-	for (int i = 0 ; i<data.length ; i++) { //fill x with the data in complex form
-		x[i] = new Complex(data[i], 0);
-	}
-	
-	Complex[] y = fft(x); //get the fft of the data
-	int n=y.length;
+	public static FFTData[] getMag(double[] data, int Fs) {
+		data=correctDataLength(data);
+		Complex[] x = new Complex[data.length];
+		for (int i = 0 ; i<data.length ; i++) { //fill x with the data in complex form
+			x[i] = new Complex(data[i], 0);
+		}
+		
+		Complex[] y = fft(x); //get the fft of the data
+		int n=y.length;
 
-	double[] k = new double[n]; //for calculating the frequency	
-	int j = 0;
-	for (int i = -n/2 ; i<(n/2)-1 ; i++) { //populate k with integers from -n/2 to n/2-1
-		k[j]=i;
-		j++;	
-	}
+		double[] k = new double[n]; //for calculating the frequency	
+		int j = 0;
+		for (int i = -n/2 ; i<(n/2)-1 ; i++) { //populate k with integers from -n/2 to n/2-1
+			k[j]=i;
+			j++;	
+		}
 
-	double T=n/(double)Fs;
+		double T=n/(double)Fs;
 
-	double amp[] = new double[n];
-	for (int i = 0; i < n; i++) {
-            amp[i] = y[i].divides(new Complex(n,0)).abs(); //normalize data and get real magnitude
-        }
+		double amp[] = new double[n];
+		for (int i = 0; i < n; i++) {
+	            amp[i] = y[i].divides(new Complex(n,0)).abs(); //normalize data and get real magnitude
+	        }
 
-	fftShift(amp); //reorder array elements so they are in order from lowest to highest frequency
+		fftShift(amp); //reorder array elements so they are in order from lowest to highest frequency
 
-	//make multidimensional array of Freq & Amp
-	double freqMag[][] = new double[n][2];
-        for (int i = 0; i < n; i++) {
-		//freqMag[i][0]=round(Math.abs(k[i]/T)); //the frequency
-		freqMag[i][0]=k[i]/T; //the frequency
-		freqMag[i][1]=amp[i]; //the 2nd element of the frequency array is the magnitude
-	}
-	return freqMag;
-            //System.out.println("Freq: " + (k[i]/T) + ", Amp: " + amp[i]);
-    }
-
-    public static void fftShift(double[] x) {
-	double[] temp = new double[x.length];
-	for (int i = 0 ; i<x.length ; i++) { //make temp array with same contents as x
-		temp[i]=x[i];
-	}
-
-	for (int i = 0 ; i<x.length/2 ; i++) {
-		x[i]=temp[x.length/2+i];
-		x[x.length/2+i]=temp[i];
-	}
-    }
-
-    public static double[] correctDataLength(double[] in) { //changes the length of in to a power of 2
-	int n = in.length;
-	double x = (int)(Math.log(n)/Math.log(2));
-	if (Math.abs((x-(Math.log(n)/Math.log(2))))<.000001) { //this statement can really be improved
-		return in;
+		//make multidimensional array of Freq & Amp
+		/*double freqMag[][] = new double[n][2];
+	        for (int i = 0; i < n; i++) {
+			//freqMag[i][0]=round(Math.abs(k[i]/T)); //the frequency
+			freqMag[i][0]=k[i]/T; //the frequency
+			freqMag[i][1]=amp[i]; //the 2nd element of the frequency array is the magnitude
+		}*/
+		FFTData[] freqMag = new FFTData[n];
+		for (int i = 0 ; i<n ; i++) {
+			double frequency = k[i]/T;
+			double magnitude = amp[i];
+			freqMag[i] = new FFTData(frequency, magnitude);
+		}
+		return freqMag;
+	            //System.out.println("Freq: " + (k[i]/T) + ", Amp: " + amp[i]);
 	}
 
-	int newLength = (int)Math.pow(2,x);
-	double[] correctArray = new double[newLength];
-	for (int i = 0 ; i<newLength-1 ; i++) {
-		if (i<in.length) {
-			correctArray[i]=in[i];
-		} else { //pad with 0s
-			correctArray[i]=0;
+	public static void fftShift(double[] x) {
+		double[] temp = new double[x.length];
+		for (int i = 0 ; i<x.length ; i++) { //make temp array with same contents as x
+			temp[i]=x[i];
+		}
+
+		for (int i = 0 ; i<x.length/2 ; i++) {
+			x[i]=temp[x.length/2+i];
+			x[x.length/2+i]=temp[i];
 		}
 	}
-	return correctArray;
-    }
 
-    public static double[] getFreqs(int n, int fS) {
-	double[] freqs = new double[n];
-	double[] k = new double[n]; //for calculating the frequency	
-	int j = 0;
-	for (int i = -n/2 ; i<(n/2)-1 ; i++) { //populate k with integers from -n/2 to n/2-1
-		k[j]=i;
-		j++;	
+	public static double[] correctDataLength(double[] in) { //changes the length of in to a power of 2
+		int n = in.length;
+		double x = (int)(Math.log(n)/Math.log(2));
+		int newLength = (int)Math.pow(2,x);
+		double[] correctArray = new double[newLength];
+		for (int i = 0 ; i<newLength-1 ; i++) {
+			if (i < n) {
+				correctArray[i]=in[i];
+			} else { //pad with 0s
+				correctArray[i]=0;
+			}
+		}
+		return correctArray;
 	}
 
-	double T=n/(double)fS;
+	public static double[] getFreqs(int n, int fS) {
+		double[] freqs = new double[n];
+		double[] k = new double[n]; //for calculating the frequency	
+		int j = 0;
+		for (int i = -n/2 ; i<(n/2)-1 ; i++) { //populate k with integers from -n/2 to n/2-1
+			k[j]=i;
+			j++;	
+		}
 
-	for (int i = 0 ; i<freqs.length ; i++) {
-		freqs[i]=k[i]/T; //the frequency
+		double T=n/(double)fS;
+
+		for (int i = 0 ; i<freqs.length ; i++) {
+			freqs[i]=k[i]/T; //the frequency
+		}
+
+		//reorder array elements so they match the form given by the FFT
+		//put beginning half at the end
+		//put end half at beginning
+		fftShift(freqs);
+		return freqs;
 	}
-
-	//reorder array elements so they match the form given by the FFT
-	//put beginning half at the end
-	//put end half at beginning
-	fftShift(freqs);
-	return freqs;
-    }
 
 }
