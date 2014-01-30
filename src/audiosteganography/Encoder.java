@@ -83,14 +83,15 @@ public class Encoder {
 						ifftReal[i]=ifft[i].re();
 					}
 
-					appendOutput(AudioTool.interleaveSamples(ifftReal), bytesRead-bytesToRead, out); //add to the array thats going to be written out
+					double[] toWrite = AudioTool.interleaveSamples(ifftReal);
+					System.arraycopy(toWrite, 0, out, bytesRead-bytesToRead, toWrite.length); //add to the array thats going to be written out
 					currentBit++; 	
-				} else if (messageAsBits[currentBit]==0 && isRest==false) {
+				} else if (messageAsBits[currentBit] == 0 && !isRest) {
 					//add a 0 to the message
-					appendOutput(samples, bytesRead-bytesToRead, out);
+					System.arraycopy(samples, 0, out, bytesRead-bytesToRead, samples.length);
 					currentBit++; 
-				} else if (isRest==true) {
-					appendOutput(samples, bytesRead-bytesToRead, out); //add on the rest so it doesn't sound weird, but don't make it seem like any bits are being written.
+				} else if (isRest) { // similar to encoding a zero, but don't increment the bit count
+					System.arraycopy(samples, 0, out, bytesRead-bytesToRead, samples.length);
 				}
 			}
 
@@ -101,7 +102,7 @@ public class Encoder {
 				for (int i = 0 ; i<leftoverData.length ; i++) {
 					leftoverData[i] = audioData[bytesRead+i];
 				}
-				appendOutput(leftoverData, bytesRead, out);
+				System.arraycopy(leftoverData, 0, out, bytesRead, leftoverData.length);
 			}
 
             File outFile = new File(outPath);
@@ -114,24 +115,6 @@ public class Encoder {
     	} catch (IOException e) {
     	    e.printStackTrace();
     	}
-	}
-
-	/*//takes in data for one channel and turns it into two channels
-	private static double[] interleaveSamples(double[] mono) {
-		double[] interleavedSamples = new double[mono.length*2];
-		for (int i = 0 ; i < mono.length ; i++) {
-			interleavedSamples[i]=mono[i];
-			interleavedSamples[mono.length+i]=mono[i];
-		}
-		return interleavedSamples;
-	}*/
-
-	//adds the data to the specified part of the array out
-	private static void appendOutput(double[] in, int startIndex, double[] out) {
-		for (int i = 0 ; i < in.length ; i++) {
-			out[startIndex]=in[i];
-			startIndex++;
-		}
 	}
 
 	public static void main(String args[]) {
