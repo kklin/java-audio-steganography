@@ -4,8 +4,11 @@ import java.io.*;
 import javax.sound.sampled.*;
 import audiosteganography.audio.AudioSampleReader;
 import audiosteganography.audio.AudioSampleWriter;
+import audiosteganography.audio.AudioTool;
 import audiosteganography.fourier.Complex;
 import audiosteganography.fourier.FFT;
+import audiosteganography.fourier.FFTData;
+import audiosteganography.fourier.FFTDataAnalyzer;
 import audiosteganography.binary.BinaryTool;
 
 public class Encoder {
@@ -18,15 +21,15 @@ public class Encoder {
 	public void encodeMessage(String message, String outPath) { //change outPath to File
 		int[] messageAsBits = BinaryTool.ASCIIToBinary(message).getIntArray();
 		int currentBit = 0;
-        	try {
-        		AudioSampleReader sampleReader = new AudioSampleReader(audioFile);
+    	try {
+    		AudioSampleReader sampleReader = new AudioSampleReader(audioFile);
 			int bytesRead = 0;
-	    		int nbChannels = sampleReader.getFormat().getChannels();
+	    	int nbChannels = sampleReader.getFormat().getChannels();
 			int totalBytes = (int) sampleReader.getSampleCount()*nbChannels;
 			double[] out = new double[totalBytes];
 			int bytesToRead=4096*2; //some aribituary number thats 2^n
 	   		double[] audioData = new double[totalBytes];
-	    		sampleReader.getInterleavedSamples(0, totalBytes, audioData);
+	    	sampleReader.getInterleavedSamples(0, totalBytes, audioData);
 
 			if (totalBytes/bytesToRead<messageAsBits.length) {
 				throw new RuntimeException("The audio file is too short for the message to fit!");
@@ -45,31 +48,21 @@ public class Encoder {
 				}
 				bytesRead+=bytesToRead;
 				double[] channelOne = new double[samples.length/2];
-	    			sampleReader.getChannelSamples(0, samples, channelOne); 
+	    		sampleReader.getChannelSamples(0, samples, channelOne); 
 
 				//System.out.println("Taking the FFT.");
 				//take the FFT
-				double[][] freqMag = FFT.getMag(channelOne, (int) sampleReader.getFormat().getFrameRate());
+				FFTData[] freqMag = FFT.getMag(channelOne, (int) sampleReader.getFormat().getFrameRate());
+				FFTDataAnalyzer analyzer = new FFTDataAnalyzer(freqMag);
+				boolean isRest = analyzer.isRest();
 
 				channelOne = FFT.correctDataLength(channelOne);
 				Complex[] complexData = new Complex[channelOne.length];
 				for (int i = 0 ; i<channelOne.length ; i++) {
-					complexData[i] = new Complex(channelOne[i],0);
+					complexData[i] = new Complex(channelOne[i], 0);
 				}
-				Complex[] complexMags=FFT.fft(complexData);
+				Complex[] complexMags = FFT.fft(complexData);
 				double[] freqs = FFT.getFreqs(complexData.length, (int) sampleReader.getFormat().getFrameRate());
-
-				//pick the fundamentalAmp			
-				double fundamentalAmp = 0;
-				for (int i = 0 ; i<freqMag.length ; i++) {
-					if (Math.abs(freqMag[i][1])>fundamentalAmp) {
-						fundamentalAmp=freqMag[i][1];
-					}
-				}
-				boolean isRest = false;
-				if (fundamentalAmp<.01) { 
-					isRest = true;
-				}
 
 				//System.out.println("Writing the 1 or 0");
 				//decide if the overtone should be changed and if so, change it. don't write if its a rest
@@ -90,7 +83,7 @@ public class Encoder {
 						ifftReal[i]=ifft[i].re();
 					}
 
-					appendOutput(interleaveSamples(ifftReal), bytesRead-bytesToRead, out); //add to the array thats going to be written out
+					appendOutput(AudioTool.interleaveSamples(ifftReal), bytesRead-bytesToRead, out); //add to the array thats going to be written out
 					currentBit++; 	
 				} else if (messageAsBits[currentBit]==0 && isRest==false) {
 					//add a 0 to the message
@@ -111,16 +104,16 @@ public class Encoder {
 				appendOutput(leftoverData, bytesRead, out);
 			}
 
-            		File outFile = new File(outPath);
-            		AudioSampleWriter audioWriter = new AudioSampleWriter(outFile,
-                    		sampleReader.getFormat(), AudioFileFormat.Type.WAVE);
-           		audioWriter.write(out);
-            		audioWriter.close();
-        	} catch (UnsupportedAudioFileException e) {
-        	    e.printStackTrace();
-        	} catch (IOException e) {
-        	    e.printStackTrace();
-        	}
+            File outFile = new File(outPath);
+            AudioSampleWriter audioWriter = new AudioSampleWriter(outFile, 
+            										sampleReader.getFormat(), AudioFileFormat.Type.WAVE);
+       		audioWriter.write(out);
+        	audioWriter.close();
+    	} catch (UnsupportedAudioFileException e) {
+    	    e.printStackTrace();
+    	} catch (IOException e) {
+    	    e.printStackTrace();
+    	}
 	}
 
 	/*//takes in data for one channel and turns it into two channels
@@ -132,19 +125,6 @@ public class Encoder {
 		}
 		return interleavedSamples;
 	}*/
-
-	//takes in data for one channel and turns it into two channels
-	private static double[] interleaveSamples(double[] mono) {
-		double[] interleavedSamples = new double[mono.length*2];
-		int interleavedSamplesCounter = 0;
-		for (int i = 0 ; i < mono.length ; i++) {
-			interleavedSamples[interleavedSamplesCounter] = mono[i];
-			interleavedSamplesCounter++;
-			interleavedSamples[interleavedSamplesCounter] = mono[i];
-			interleavedSamplesCounter++;
-		}
-		return interleavedSamples;
-	}
 
 	//adds the data to the specified part of the array out
 	private static void appendOutput(double[] in, int startIndex, double[] out) {

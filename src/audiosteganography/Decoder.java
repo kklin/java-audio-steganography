@@ -2,6 +2,8 @@ package audiosteganography;
 
 import audiosteganography.audio.AudioSampleReader;
 import audiosteganography.fourier.FFT;
+import audiosteganography.fourier.FFTData;
+import audiosteganography.fourier.FFTDataAnalyzer;
 import audiosteganography.binary.Binary;
 import audiosteganography.binary.BinaryTool;
 import java.io.*;
@@ -42,10 +44,11 @@ public class Decoder {
 
 				//take the FFT
 				channelOne = FFT.correctDataLength(channelOne);
-				double[][] freqMag = FFT.getMag(channelOne, (int) sampleReader.getFormat().getFrameRate());
+				// double[][] freqMag = FFT.getMag(channelOne, (int) sampleReader.getFormat().getFrameRate());
+				FFTData[] fftData = FFT.getMag(channelOne, (int) sampleReader.getFormat().getFrameRate());
 
 				//pick the fundamentalAmp			
-				double fundamentalAmp = 0;
+				/*double fundamentalAmp = 0;
 				for (int i = 0 ; i<freqMag.length ; i++) {
 					if (Math.abs(freqMag[i][1])>fundamentalAmp) {
 						fundamentalAmp=freqMag[i][1];
@@ -54,17 +57,24 @@ public class Decoder {
 				boolean isRest = false;
 				if (fundamentalAmp<.01) { 
 					isRest = true;
+				}*/
+				FFTDataAnalyzer analyzer = new FFTDataAnalyzer(fftData);
+				boolean isRest = analyzer.isRest();
+
+				double ampToTest = 0; // TODO: rename
+				if (!isRest) {
+					ampToTest = analyzer.getMagnitudeOfFrequency(20000); // TODO: don't hardcode frequency
 				}
 
 				//get the amplitude of freq 20000
-				double ampToTest = 0;
+				/*double ampToTest = 0;
 				if (!isRest) {
 					for (int i = 0 ; i<freqMag.length ; i++) { //you don't have to start from 0..
 						if (Math.abs(Math.abs(freqMag[i][0])-20000)<5) {
 							ampToTest = freqMag[i][1];
 						}
 					}
-				}
+				}*/
 				
 				if (!isRest) {
 					//compare the overtones to see if there should be a 1 or 0
