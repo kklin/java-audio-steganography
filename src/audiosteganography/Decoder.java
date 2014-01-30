@@ -47,17 +47,6 @@ public class Decoder {
 				// double[][] freqMag = FFT.getMag(channelOne, (int) sampleReader.getFormat().getFrameRate());
 				FFTData[] fftData = FFT.getMag(channelOne, (int) sampleReader.getFormat().getFrameRate());
 
-				//pick the fundamentalAmp			
-				/*double fundamentalAmp = 0;
-				for (int i = 0 ; i<freqMag.length ; i++) {
-					if (Math.abs(freqMag[i][1])>fundamentalAmp) {
-						fundamentalAmp=freqMag[i][1];
-					}
-				}
-				boolean isRest = false;
-				if (fundamentalAmp<.01) { 
-					isRest = true;
-				}*/
 				FFTDataAnalyzer analyzer = new FFTDataAnalyzer(fftData);
 				boolean isRest = analyzer.isRest();
 
@@ -65,16 +54,6 @@ public class Decoder {
 				if (!isRest) {
 					ampToTest = analyzer.getMagnitudeOfFrequency(20000); // TODO: don't hardcode frequency
 				}
-
-				//get the amplitude of freq 20000
-				/*double ampToTest = 0;
-				if (!isRest) {
-					for (int i = 0 ; i<freqMag.length ; i++) { //you don't have to start from 0..
-						if (Math.abs(Math.abs(freqMag[i][0])-20000)<5) {
-							ampToTest = freqMag[i][1];
-						}
-					}
-				}*/
 				
 				if (!isRest) {
 					//compare the overtones to see if there should be a 1 or 0
