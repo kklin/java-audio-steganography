@@ -10,6 +10,7 @@ import audiosteganography.fourier.FFT;
 import audiosteganography.fourier.FFTData;
 import audiosteganography.fourier.FFTDataAnalyzer;
 import audiosteganography.binary.BinaryTool;
+import jm.util.*;
 
 public class Encoder {
 	File audioFile;
@@ -21,15 +22,24 @@ public class Encoder {
 	public void encodeMessage(String message, String outPath) { //change outPath to File
 		int[] messageAsBits = BinaryTool.ASCIIToBinary(message).getIntArray();
 		int currentBit = 0;
-    	try {
-    		AudioSampleReader sampleReader = new AudioSampleReader(audioFile);
-			int bytesRead = 0;
+        	float[] dataFloat = Read.audio(audioFile.getAbsolutePath());     	
+        	double[] audioData = new double[dataFloat.length];
+        	for (int i = 0 ; i<dataFloat.length ; i++) {
+        		audioData[i] = (double) dataFloat[i];
+        	}
+        	int bytesRead = 0;
+			int totalBytes = audioData.length;
+			double[] out = new double[totalBytes];
+			int bytesToRead=4096*2; //some aribituary number thats 2^n
+		try {
+			AudioSampleReader sampleReader = new AudioSampleReader(audioFile);
+			/*int bytesRead = 0;
 	    	int nbChannels = sampleReader.getFormat().getChannels();
 			int totalBytes = (int) sampleReader.getSampleCount()*nbChannels;
 			double[] out = new double[totalBytes];
 			int bytesToRead=4096*2; //some aribituary number thats 2^n
 	   		double[] audioData = new double[totalBytes];
-	    	sampleReader.getInterleavedSamples(0, totalBytes, audioData);
+	    	sampleReader.getInterleavedSamples(0, totalBytes, audioData);*/
 
 			if (totalBytes/bytesToRead<messageAsBits.length) {
 				throw new RuntimeException("The audio file is too short for the message to fit!");
@@ -48,11 +58,13 @@ public class Encoder {
 				}
 				bytesRead+=bytesToRead;
 				double[] channelOne = new double[samples.length/2];
-	    		sampleReader.getChannelSamples(0, samples, channelOne); 
-
+				for (int i = 0 ; i < samples.length ; i += 2) {
+					channelOne[i/2] = samples[i];
+				}
+	    		//sampleReader.getChannelSamples(0, samples, channelOne); 
 				//System.out.println("Taking the FFT.");
 				//take the FFT
-				FFTData[] freqMag = FFT.getMag(channelOne, (int) sampleReader.getFormat().getFrameRate());
+				FFTData[] freqMag = FFT.getMag(channelOne, 44100); // TODO: don't hardcode
 				FFTDataAnalyzer analyzer = new FFTDataAnalyzer(freqMag);
 				boolean isRest = analyzer.isRest();
 
@@ -62,7 +74,7 @@ public class Encoder {
 					complexData[i] = new Complex(channelOne[i], 0);
 				}
 				Complex[] complexMags = FFT.fft(complexData);
-				double[] freqs = FFT.getFreqs(complexData.length, (int) sampleReader.getFormat().getFrameRate());
+				double[] freqs = FFT.getFreqs(complexData.length, 44100); // TODO: don't hardcode
 
 				//System.out.println("Writing the 1 or 0");
 				//decide if the overtone should be changed and if so, change it. don't write if its a rest
@@ -70,7 +82,7 @@ public class Encoder {
 					//edit the data thats going to be ifft'd
 					for (int i = 0 ; i<freqs.length ; i++) {
 						if (Math.abs(Math.abs(freqs[i])-20000)<5) { //lets try changing a set freq
-							complexMags[i]=new Complex(.01*channelOne.length,0);
+							 complexMags[i] = new Complex(5, 0); // don't hardcode
 						}
 					}
 
@@ -105,16 +117,19 @@ public class Encoder {
 				System.arraycopy(leftoverData, 0, out, bytesRead, leftoverData.length);
 			}
 
+			/*float[] outFloat = new float[out.length];
+			for (int i = 0 ; i < outFloat.length ; i++) {
+				outFloat[i] = (float) out[i];
+			}
+            Write.audio(outFloat, outPath);*/
             File outFile = new File(outPath);
             AudioSampleWriter audioWriter = new AudioSampleWriter(outFile, 
             										sampleReader.getFormat(), AudioFileFormat.Type.WAVE);
        		audioWriter.write(out);
         	audioWriter.close();
-    	} catch (UnsupportedAudioFileException e) {
-    	    e.printStackTrace();
-    	} catch (IOException e) {
-    	    e.printStackTrace();
-    	}
+        } catch (Exception e) {
+        	e.printStackTrace();
+        }
 	}
 
 	public static void main(String args[]) {
@@ -123,6 +138,6 @@ public class Encoder {
 		String outPath = filePath.substring(0,filePath.length()-4)+"-Encoded.wav";
 		Encoder encoder = new Encoder(new File(filePath));
 		encoder.encodeMessage(message,outPath);
-		System.out.println("Successfully encoded the message into " + outPath);
+		System.out.println("Successfully encoded \"" + message + "\" into " + outPath);
 	}
 }

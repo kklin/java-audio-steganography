@@ -10,14 +10,15 @@ public class FFTDataAnalyzer {
 	}
 
 	public boolean isRest() {
-		double maxMagnitude = 0;
+		return false;
+		/*double maxMagnitude = 0;
 		for (int i = 0 ; i<fftData.length ; i++) {
 			if (fftData[i].getMagnitude() > maxMagnitude) { // Math.abs(data.getMagnitude())
 				maxMagnitude = fftData[i].getMagnitude();
 			}
 		}
 
-		return (maxMagnitude < REST_THRESHOLD);
+		return (maxMagnitude < REST_THRESHOLD);*/
 	}
 
 	public double getMagnitudeOfFrequency(double frequency) {

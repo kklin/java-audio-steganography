@@ -59,7 +59,7 @@ public class Decoder {
 					//compare the overtones to see if there should be a 1 or 0
 					//int overtoneToTest = overtones.length;
 					//if (Math.abs(overtones[overtoneToTest-1][1]-expectedOvertones[overtoneToTest-1])>.0049) {
-					if (ampToTest>.009) { //just test a certain freq
+					if (ampToTest>.0009) { //just test a certain freq
 						//checking if something is null..
 						messageAsBytes.append("1");
 					} else {

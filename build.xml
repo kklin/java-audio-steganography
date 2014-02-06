@@ -2,6 +2,7 @@
     <description>
         java-audio-steganography build file
     </description>
+
   <!-- set global properties for this build -->
   <property name="src" location="src"/>
   <property name="build" location="build"/>
@@ -17,7 +18,12 @@
   <target name="compile" depends="init"
         description="compile the source " >
     <!-- Compile the java code from ${src} into ${build} -->
-    <javac srcdir="${src}" destdir="${build}"/>
+    <javac srcdir="${src}" destdir="${build}">
+      <classpath>
+        <pathelement path="${classpath}"/>
+        <pathelement location="lib/jMusic1.6.4.jar"/>
+      </classpath>
+    </javac>
   </target>
 
   <target name="dist" depends="compile"
@@ -34,5 +40,41 @@
     <!-- Delete the ${build} and ${dist} directory trees -->
     <delete dir="${build}"/>
     <delete dir="${dist}"/>
+  </target>
+
+  <target name="run"
+        description="run" >
+    <!-- Compile the java code from ${src} into ${build} -->
+    <java classname="audiosteganography.AudioQualityTest">
+      <classpath>
+        <pathelement path="${classpath}:build"/>
+        <pathelement location="lib/jMusic1.6.4.jar"/>
+      </classpath>
+    </java>
+  </target>
+
+  <target name="encode"
+        description="encode" >
+  <!-- Compile the java code from ${src} into ${build} -->
+  <java classname="audiosteganography.Encoder">
+      <classpath>
+        <pathelement path="${classpath}:build"/>
+        <pathelement location="lib/jMusic1.6.4.jar"/>
+      </classpath>
+      <arg value="${message}"/>
+      <arg value="${path}"/>
+    </java>
+  </target>
+
+  <target name="decode"
+        description="decode" >
+  <!-- Compile the java code from ${src} into ${build} -->
+  <java classname="audiosteganography.Decoder">
+      <classpath>
+        <pathelement path="${classpath}:build"/>
+        <pathelement location="lib/jMusic1.6.4.jar"/>
+      </classpath>
+      <arg value="${path}"/>
+    </java>
   </target>
 </project>

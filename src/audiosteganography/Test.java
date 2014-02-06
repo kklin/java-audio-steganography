@@ -5,6 +5,12 @@
 package audiosteganography;
 
 import java.io.File;
+import audiosteganography.audio.AudioSampleReader;
+import audiosteganography.audio.AudioSampleWriter;
+import audiosteganography.audio.AudioTool;
+import javax.sound.sampled.*;
+import audiosteganography.fourier.Complex;
+import audiosteganography.fourier.FFT;
 
 /**
  *
