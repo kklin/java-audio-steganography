@@ -1,5 +1,7 @@
 package audiosteganography.binary;
 
+import java.math.BigInteger;
+
 public class Binary {
 	private int[] contents;
 
@@ -25,6 +27,15 @@ public class Binary {
 		return contents;
 	}
 
+	public byte[] getByteArray() {
+		String stringRepr = getStringRepr();
+		byte[] bytes = new byte[stringRepr.length()/8];
+		for (int i = 0 ; i < bytes.length ; i++) {
+			bytes[i] = (byte) Integer.parseInt(stringRepr.substring(i*8, (i+1)*8), 2);
+		}
+		return bytes;
+	}
+
 	public String getStringRepr() {
 		String stringRepr = "";
 		for (int i = 0 ; i<contents.length ; i++) {
@@ -32,8 +43,14 @@ public class Binary {
 		}
 		return stringRepr;
 	}
+
 	@Override
 	public String toString() {
 		return getStringRepr();
+	}
+
+	// returns the total number of bits represented by this object
+	public int length() {
+		return getStringRepr().length();
 	}
 }

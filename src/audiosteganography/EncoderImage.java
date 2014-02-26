@@ -10,17 +10,20 @@ import audiosteganography.fourier.FFT;
 import audiosteganography.fourier.FFTData;
 import audiosteganography.fourier.FFTDataAnalyzer;
 import audiosteganography.binary.BinaryTool;
+import audiosteganography.binary.Binary;
 import jm.util.*;
 
-public class Encoder {
+public class EncoderImage {
 	File audioFile;
 
-	public Encoder(File audioFile) {
+	public EncoderImage(File audioFile) {
 		this.audioFile = audioFile;
 	}
 
-	public void encodeMessage(String message, String outPath) { //change outPath to File
-		int[] messageAsBits = BinaryTool.ASCIIToBinary(message).getIntArray();
+	public void encodeMessage(String imagePath, String outPath) throws Exception { //change outPath to File
+		Binary binary = BinaryTool.fileToBinary(new File(imagePath));
+		int[] messageAsBits = binary.getIntArray();
+		System.out.println("Going to write " + binary.length() + " bits");
 		int currentBit = 0;
         	float[] dataFloat = Read.audio(audioFile.getAbsolutePath());     	
         	double[] audioData = new double[dataFloat.length];
@@ -30,7 +33,7 @@ public class Encoder {
         	int bytesRead = 0;
 			int totalBytes = audioData.length;
 			double[] out = new double[totalBytes];
-			int bytesToRead=4096*2; //some aribituary number thats 2^n
+			int bytesToRead=2048*2; //some aribituary number thats 2^n
 		try {
 			AudioSampleReader sampleReader = new AudioSampleReader(audioFile);
 			/*int bytesRead = 0;
@@ -42,7 +45,7 @@ public class Encoder {
 	    	sampleReader.getInterleavedSamples(0, totalBytes, audioData);*/
 
 			if (totalBytes/bytesToRead<messageAsBits.length) {
-				throw new RuntimeException("The audio file is too short for the message to fit!");
+				throw new RuntimeException("The audio file is too short for the file to fit!");
 			}
 
 			while (bytesRead<totalBytes && currentBit<messageAsBits.length) {
@@ -82,7 +85,7 @@ public class Encoder {
 					//edit the data thats going to be ifft'd
 					for (int i = 0 ; i<freqs.length ; i++) {
 						if (Math.abs(Math.abs(freqs[i])-20000)<5) { //lets try changing a set freq
-							 complexMags[i] = new Complex(15, 0); // don't hardcode
+							 complexMags[i] = new Complex(50, 0); // don't hardcode
 						}
 					}
 
@@ -132,12 +135,12 @@ public class Encoder {
         }
 	}
 
-	public static void main(String args[]) {
-		String message = args[0];
+	public static void main(String args[]) throws Exception {
+		String imagePath = args[0];
 		String filePath = args[1];
 		String outPath = filePath.substring(0,filePath.length()-4)+"-Encoded.wav";
-		Encoder encoder = new Encoder(new File(filePath));
-		encoder.encodeMessage(message,outPath);
-		System.out.println("Successfully encoded \"" + message + "\" into " + outPath);
+		EncoderImage encoder = new EncoderImage(new File(filePath));
+		encoder.encodeMessage(imagePath ,outPath);
+		System.out.println("Successfully encoded \"" + imagePath + "\" into " + outPath);
 	}
 }

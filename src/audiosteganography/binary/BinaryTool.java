@@ -6,6 +6,14 @@ package audiosteganography.binary;
 
 import java.util.Arrays;
 import audiosteganography.binary.Binary;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class BinaryTool {
 	public static final int NUMBER_OF_BITS = 8;
@@ -47,10 +55,27 @@ public class BinaryTool {
 		return (char) Integer.parseInt(binaryData, 2);
 	}
 
-	public static void main(String args[]) {
+    public static Binary fileToBinary(File file) throws IOException {
+	    Path path = Paths.get(file.getPath());    	
+    	byte[] bytes = Files.readAllBytes(path);
+    	StringBuilder sb = new StringBuilder();    	
+	    for (byte by : bytes)
+	      sb.append(Integer.toBinaryString(0xFF & by | 0x100).substring(1));
+	    return new Binary(sb.toString());
+    }
+
+    public static void writeToFile(Binary toWrite, String outPath) throws IOException {
+    	Path path = Paths.get(outPath);
+    	byte[] out = toWrite.getByteArray();
+    	Files.write(path, out);
+    }
+
+	public static void main(String args[]) throws IOException {
 		String toConvert = args[0];
-		Binary testBinary = BinaryTool.ASCIIToBinary(toConvert);
+		/*Binary testBinary = BinaryTool.ASCIIToBinary(toConvert);
 		System.out.println(toConvert + " in " + NUMBER_OF_BITS + "-bit binary is: " + testBinary);
-		System.out.println(testBinary + " converted back to ASCII is: " + BinaryTool.binaryToASCII(testBinary));
+		System.out.println(testBinary + " converted back to ASCII is: " + BinaryTool.binaryToASCII(testBinary));*/
+		Binary fileData = BinaryTool.fileToBinary(new File(toConvert));
+		System.out.println(fileData);
 	}
 }

@@ -77,4 +77,30 @@
       <arg value="${path}"/>
     </java>
   </target>
+
+  <target name="encodeImage"
+        description="encodeImage" >
+  <!-- Compile the java code from ${src} into ${build} -->
+  <java classname="audiosteganography.EncoderImage">
+      <classpath>
+        <pathelement path="${classpath}:build"/>
+        <pathelement location="lib/jMusic1.6.4.jar"/>
+      </classpath>
+      <arg value="${inFile}"/>
+      <arg value="${audioFile}"/>
+    </java>
+  </target>
+
+  <target name="decodeImage"
+        description="decodeImage" >
+  <!-- Compile the java code from ${src} into ${build} -->
+  <java classname="audiosteganography.DecoderImage">
+      <classpath>
+        <pathelement path="${classpath}:build"/>
+        <pathelement location="lib/jMusic1.6.4.jar"/>
+      </classpath>
+      <arg value="${inPath}"/>
+      <arg value="${outPath}"/>
+    </java>
+  </target>  
 </project>
